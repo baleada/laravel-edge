@@ -1,11 +1,11 @@
 <?php
 
-namespace Baleada;
+namespace Baleada\Edge;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model as LaravelModel;
 use Illuminate\Database\Eloquent\Builder;
 
-class Edge extends Model
+class Model extends LaravelModel
 {
     public $fillable = [
         'from_kind',
