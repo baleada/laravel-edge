@@ -7,13 +7,26 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Model extends LaravelModel
 {
-    public $fillable = [
+    public static $defaultFillable = [
         'from_kind',
         'from',
         'kind',
         'to_kind',
         'to',
         'profile',
+    ];
+
+    protected $fillable = [
+        'from_kind',
+        'from',
+        'kind',
+        'to_kind',
+        'to',
+        'profile',
+    ];
+
+    public static $defaultCasts = [
+        'profile' => 'json',
     ];
 
     protected $casts = [
@@ -25,6 +38,11 @@ class Model extends LaravelModel
         return $fromId
             ? $query->where('from_kind', $fromKind)->where('from', $fromId)
             : $query->where('from_kind', $fromKind);
+    }
+
+    public function scopeFromNot(Builder $query, string $fromKind): Builder
+    {
+        return $query->whereNot('from_kind', $fromKind);
     }
 
     public function scopeFromIn(Builder $query, array $fromKinds): Builder
@@ -61,6 +79,11 @@ class Model extends LaravelModel
             : $query->where('to_kind', $toKind);
     }
 
+    public function scopeToNot(Builder $query, string $toKind): Builder
+    {
+        return $query->whereNot('to_kind', $toKind);
+    }
+
     public function scopeToIn(Builder $query, array $toKinds): Builder
     {
         return $query->whereIn('to_kind', $toKinds);
@@ -88,9 +111,14 @@ class Model extends LaravelModel
         return $query->orWhereNotIn('to_kind', $toKinds);
     }
 
-    public function scopeKind(Builder $query, string $operatorOrKind, string $kind): Builder
+    public function scopeKind(Builder $query, string $kind): Builder
     {
-        return $query->where('kind', $operatorOrKind, $kind);
+        return $query->where('kind', $kind);
+    }
+
+    public function scopeKindNot(Builder $query, string $kind): Builder
+    {
+        return $query->whereNot('kind', $kind);
     }
 
     public function scopeKindIn(Builder $query, array $kinds): Builder
@@ -103,9 +131,9 @@ class Model extends LaravelModel
         return $query->whereNotIn('kind', $kinds);
     }
 
-    public function scopeOrKind(Builder $query, string $operatorOrKind, string $kind): Builder
+    public function scopeOrKind(Builder $query, string $kind): Builder
     {
-        return $query->orWhere('kind', $operatorOrKind, $kind);
+        return $query->orWhere('kind',$kind);
     }
 
     public function scopeOrKindIn(Builder $query, array $kinds): Builder
