@@ -4,7 +4,13 @@ namespace Baleada\Edge;
 
 use Illuminate\Database\Eloquent\Model as LaravelModel;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * [Docs](https://baleada.dev/docs/edge)
+ */
 class Model extends LaravelModel
 {
     public static $defaultFillable = [
@@ -32,6 +38,17 @@ class Model extends LaravelModel
     protected $casts = [
         'profile' => 'json',
     ];
+
+    public static function connect (Collection|array $edges): EloquentCollection
+    {
+        $created = new EloquentCollection();
+        DB::transaction(function () use ($edges, $created) {
+            foreach ($edges as $edge) {
+                $created->push(self::create($edge));
+            }
+        });
+        return $created;
+    }
 
     public function scopeFrom(Builder $query, string $fromKind, string $fromId = null): Builder
     {
