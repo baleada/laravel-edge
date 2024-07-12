@@ -6,6 +6,9 @@ use Illuminate\Database\Migrations\Migration as LaravelMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * [Docs](https://baleada.dev/docs/edge)
+ */
 class Migration extends LaravelMigration
 {
     protected $table = 'edges';
