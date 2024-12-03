@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use TypeError;
 
 /**
  * [Docs](https://baleada.dev/docs/edge)
@@ -39,6 +40,19 @@ class Model extends LaravelModel
         'profile' => 'json',
     ];
 
+    private static function guardAgainstExplicitNull(int $argumentCount, string $nonNullableName, mixed $argument): void
+    {
+        if ($argumentCount === 3 && $argument === null) {
+            $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+            $class = $caller['class'] ?? 'UnknownClass';
+            $method = $caller['function'] ?? 'UnknownMethod';
+
+            throw new TypeError(
+                "{$class}::{$method}(): Argument #3 (\${$nonNullableName}) must be of type string|int, explicit null given, called in {$caller['file']} on line {$caller['line']}"
+            );
+        }
+    }
+
     public static function connect (Collection|array $edges): EloquentCollection
     {
         $created = new EloquentCollection();
@@ -50,8 +64,10 @@ class Model extends LaravelModel
         return $created;
     }
 
-    public function scopeFrom(Builder $query, string $fromKind, string $fromId = null): Builder
+    public function scopeFrom(Builder $query, string $fromKind, string|int $fromId = null): Builder
     {
+        self::guardAgainstExplicitNull(func_num_args(), 'fromId', $fromId);
+        
         return $fromId
             ? $query->where('from_kind', $fromKind)->where('from', $fromId)
             : $query->where('from_kind', $fromKind);
@@ -72,8 +88,10 @@ class Model extends LaravelModel
         return $query->whereNotIn('from_kind', $fromKinds);
     }
 
-    public function scopeOrFrom(Builder $query, string $fromKind, string $fromId = null): Builder
+    public function scopeOrFrom(Builder $query, string $fromKind, string|int $fromId = null): Builder
     {
+        self::guardAgainstExplicitNull(func_num_args(), 'fromId', $fromId);
+
         return $fromId
             ? $query->orWhere('from_kind', $fromKind)->where('from', $fromId)
             : $query->orWhere('from_kind', $fromKind);
@@ -89,8 +107,10 @@ class Model extends LaravelModel
         return $query->orWhereNotIn('from_kind', $fromKinds);
     }
 
-    public function scopeTo(Builder $query, string $toKind, string $toId = null): Builder
+    public function scopeTo(Builder $query, string $toKind, string|int $toId = null): Builder
     {
+        self::guardAgainstExplicitNull(func_num_args(), 'toId', $toId);
+
         return $toId
             ? $query->where('to_kind', $toKind)->where('to', $toId)
             : $query->where('to_kind', $toKind);
@@ -111,8 +131,10 @@ class Model extends LaravelModel
         return $query->whereNotIn('to_kind', $toKinds);
     }
 
-    public function scopeOrTo(Builder $query, string $toKind, string $toId = null): Builder
+    public function scopeOrTo(Builder $query, string $toKind, string|int $toId = null): Builder
     {
+        self::guardAgainstExplicitNull(func_num_args(), 'toId', $toId);
+
         return $toId
             ? $query->orWhere('to_kind', $toKind)->where('to', $toId)
             : $query->orWhere('to_kind', $toKind);
