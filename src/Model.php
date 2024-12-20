@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use TypeError;
 
 /**
  * [Docs](https://baleada.dev/docs/edge)
@@ -40,18 +39,7 @@ class Model extends LaravelModel
         'profile' => 'json',
     ];
 
-    private static function guardAgainstExplicitNull(int $argumentCount, string $nonNullableName, mixed $argument): void
-    {
-        if ($argumentCount === 3 && $argument === null) {
-            $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
-            $class = $caller['class'] ?? 'UnknownClass';
-            $method = $caller['function'] ?? 'UnknownMethod';
-
-            throw new TypeError(
-                "{$class}::{$method}(): Argument #3 (\${$nonNullableName}) must be of type string|int, explicit null given, called in {$caller['file']} on line {$caller['line']}"
-            );
-        }
-    }
+    public const NULLISH_ID = 'fP3QWOocuqYwXc06nR826';
 
     public static function connect (Collection|array $edges): EloquentCollection
     {
@@ -64,11 +52,9 @@ class Model extends LaravelModel
         return $created;
     }
 
-    public function scopeFrom(Builder $query, string $fromKind, string|int $fromId = null): Builder
+    public function scopeFrom(Builder $query, string $fromKind, string|int $fromId = Model::NULLISH_ID): Builder
     {
-        self::guardAgainstExplicitNull(func_num_args(), 'fromId', $fromId);
-        
-        return $fromId
+        return $fromId !== Model::NULLISH_ID
             ? $query->where('from_kind', $fromKind)->where('from', $fromId)
             : $query->where('from_kind', $fromKind);
     }
@@ -88,11 +74,9 @@ class Model extends LaravelModel
         return $query->whereNotIn('from_kind', $fromKinds);
     }
 
-    public function scopeOrFrom(Builder $query, string $fromKind, string|int $fromId = null): Builder
+    public function scopeOrFrom(Builder $query, string $fromKind, string|int $fromId = Model::NULLISH_ID): Builder
     {
-        self::guardAgainstExplicitNull(func_num_args(), 'fromId', $fromId);
-
-        return $fromId
+        return $fromId !== Model::NULLISH_ID
             ? $query->orWhere('from_kind', $fromKind)->where('from', $fromId)
             : $query->orWhere('from_kind', $fromKind);
     }
@@ -107,11 +91,9 @@ class Model extends LaravelModel
         return $query->orWhereNotIn('from_kind', $fromKinds);
     }
 
-    public function scopeTo(Builder $query, string $toKind, string|int $toId = null): Builder
+    public function scopeTo(Builder $query, string $toKind, string|int $toId = Model::NULLISH_ID): Builder
     {
-        self::guardAgainstExplicitNull(func_num_args(), 'toId', $toId);
-
-        return $toId
+        return $toId !== Model::NULLISH_ID
             ? $query->where('to_kind', $toKind)->where('to', $toId)
             : $query->where('to_kind', $toKind);
     }
@@ -131,11 +113,9 @@ class Model extends LaravelModel
         return $query->whereNotIn('to_kind', $toKinds);
     }
 
-    public function scopeOrTo(Builder $query, string $toKind, string|int $toId = null): Builder
+    public function scopeOrTo(Builder $query, string $toKind, string|int $toId = Model::NULLISH_ID): Builder
     {
-        self::guardAgainstExplicitNull(func_num_args(), 'toId', $toId);
-
-        return $toId
+        return $toId !== Model::NULLISH_ID
             ? $query->orWhere('to_kind', $toKind)->where('to', $toId)
             : $query->orWhere('to_kind', $toKind);
     }
@@ -187,12 +167,12 @@ class Model extends LaravelModel
 
     public function scopeProfile(Builder $query, string $key, string $value): Builder
     {
-        return $query->whereJsonContains("profile->${key}", $value);
+        return $query->whereJsonContains("profile->{$key}", $value);
     }
 
     public function scopeProfileNot(Builder $query, string $key, string $value): Builder
     {
-        return $query->whereJsonDoesntContain("profile->${key}", $value);
+        return $query->whereJsonDoesntContain("profile->{$key}", $value);
     }
 
     public function scopeProfileKey(Builder $query, string $key): Builder
@@ -207,27 +187,27 @@ class Model extends LaravelModel
 
     public function scopeProfileOverlaps(Builder $query, string $key, array $values): Builder
     {
-        return $query->whereJsonOverlaps("profile->${key}", $values);
+        return $query->whereJsonOverlaps("profile->{$key}", $values);
     }
 
     public function scopeProfileDoesntOverlap(Builder $query, string $key, array $values): Builder
     {
-        return $query->whereJsonDoesntOverlap("profile->${key}", $values);
+        return $query->whereJsonDoesntOverlap("profile->{$key}", $values);
     }
 
     public function scopeProfileLength(Builder $query, string $key, int $length): Builder
     {
-        return $query->whereJsonLength("profile->${key}", $length);
+        return $query->whereJsonLength("profile->{$key}", $length);
     }
 
     public function scopeOrProfile(Builder $query, string $key, string $value): Builder
     {
-        return $query->orWhereJsonContains("profile->${key}", $value);
+        return $query->orWhereJsonContains("profile->{$key}", $value);
     }
 
     public function scopeOrProfileNot(Builder $query, string $key, string $value): Builder
     {
-        return $query->orWhereJsonDoesntContain("profile->${key}", $value);
+        return $query->orWhereJsonDoesntContain("profile->{$key}", $value);
     }
 
     public function scopeOrProfileKey(Builder $query, string $key): Builder
@@ -242,16 +222,16 @@ class Model extends LaravelModel
 
     public function scopeOrProfileOverlaps(Builder $query, string $key, array $values): Builder
     {
-        return $query->orWhereJsonOverlaps("profile->${key}", $values);
+        return $query->orWhereJsonOverlaps("profile->{$key}", $values);
     }
 
     public function scopeOrProfileDoesntOverlap(Builder $query, string $key, array $values): Builder
     {
-        return $query->orWhereJsonDoesntOverlap("profile->${key}", $values);
+        return $query->orWhereJsonDoesntOverlap("profile->{$key}", $values);
     }
 
     public function scopeOrProfileLength(Builder $query, string $key, int $length): Builder
     {
-        return $query->orWhereJsonLength("profile->${key}", $length);
+        return $query->orWhereJsonLength("profile->{$key}", $length);
     }
 }
