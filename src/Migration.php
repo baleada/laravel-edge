@@ -12,12 +12,12 @@ use Illuminate\Support\Facades\Schema;
 class Migration extends LaravelMigration
 {
     protected $table = 'edges';
-    protected function types()
+    protected function columns()
     {
         return [];
     }
 
-    private $defaultTypes = [
+    private $defaultColumns = [
         'id' => 'id',
         'from_kind' => 'string',
         'from' => 'integer',
@@ -26,26 +26,30 @@ class Migration extends LaravelMigration
         'to' => 'integer',
     ];
 
-    private function toTypes(array $types): array
+    private function ensureCreateColumns(array $types): array
     {
         return collect($types)
-            ->map(fn ($config) => is_string($config) ? [$config] : $config)
+            ->map(fn ($createColumn, $column) => (
+                is_string($createColumn)
+                    ? fn (Blueprint $table) => $table->$createColumn($column)
+                    : $createColumn
+            ))
+            ->values()
             ->toArray();
     }
 
     public function up(): void
     {
-        $types = $this->toTypes([
-            ...$this->defaultTypes,
-            ...$this->types(),
+        $createColumns = $this->ensureCreateColumns([
+            ...$this->defaultColumns,
+            ...$this->columns(),
         ]);
 
         Schema::create(
             $this->table,
-            function (Blueprint $table) use ($types) {
-                foreach ($types as $column => $config) {
-                    $type = array_shift($config);
-                    $table->$type($column, ...$config);
+            function (Blueprint $table) use ($createColumns) {
+                foreach ($createColumns as $createColumn) {
+                    $createColumn($table);
                 }
                 $table->json('profile');
                 $table->timestamps();
