@@ -4,6 +4,7 @@ namespace Baleada\Edge;
 
 use Illuminate\Database\Migrations\Migration as LaravelMigration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -26,16 +27,14 @@ class Migration extends LaravelMigration
         'to' => 'integer',
     ];
 
-    private function ensureCreateColumns(array $types): array
+    private function ensureCreateColumns(array $columns): Collection
     {
-        return collect($types)
-            ->map(fn ($createColumn, $column) => (
-                is_string($createColumn)
-                    ? fn (Blueprint $table) => $table->$createColumn($column)
-                    : $createColumn
-            ))
-            ->values()
-            ->toArray();
+        return collect($columns)
+            ->mapWithKeys(fn ($createColumn, $column) => [
+                $column => is_string($createColumn)
+                    ? fn (string $column, Blueprint $table) => $table->$createColumn($column)
+                    : $createColumn,
+            ]);
     }
 
     public function up(): void
@@ -48,9 +47,7 @@ class Migration extends LaravelMigration
         Schema::create(
             $this->table,
             function (Blueprint $table) use ($createColumns) {
-                foreach ($createColumns as $createColumn) {
-                    $createColumn($table);
-                }
+                $createColumns->each(fn ($createColumn, $column) => $createColumn($column, $table));
                 $table->json('profile');
                 $table->timestamps();
             }
