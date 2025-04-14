@@ -177,12 +177,12 @@ class Model extends LaravelModel
 
     public function scopeProfileKey(Builder $query, string $key): Builder
     {
-        return $query->whereJsonContainsKey('profile', $key);
+        return $query->whereJsonContainsKey("profile->{$key}");
     }
 
     public function scopeProfileKeyNot(Builder $query, string $key): Builder
     {
-        return $query->whereJsonDoesntContainKey('profile', $key);
+        return $query->whereJsonDoesntContainKey("profile->{$key}");
     }
 
     public function scopeProfileOverlaps(Builder $query, string $key, array $values): Builder
